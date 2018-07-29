@@ -14,14 +14,14 @@ int main(int argc, char const *argv[])
     }
 
     /*Creating Internet stream socket*/
-    if (sockfd = socket(AF_INET, SOCK_STREAM, 0) < 0)
+    if (sockfd = socket(AF_INET6, SOCK_STREAM, 0) < 0)
         _error("socket");
     
     /*Initializing TCP/IP,port number , IP address of server*/
     bzero(&servaddr, sizeof(servaddr));
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_port = htons(13);
-    if (inet_pton(AF_INET, argv[1], &servaddr.sin_addr) <= 0)
+    servaddr.sin6_family = AF_INET6;
+    servaddr.sin6_port = htons(13);
+    if (inet_pton(AF_INET6, argv[1], &servaddr.sin6_addr) <= 0)
         _error("inet_pton");
     
     /*Connecting to the server*/
