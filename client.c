@@ -1,55 +1,94 @@
-#include "socket.h" //This is my own header//
-int sockfd;
-void _error(const char *str)
+/*The IP address of same hosts is 127.0.0.1*/
+/*Chat application*/
+#include<stdio.h>
+#include<sys/types.h>
+#include<sys/socket.h>
+#include <arpa/inet.h>
+#include<netinet/in.h>
+#include<stdlib.h>
+#include<unistd.h>
+#include<string.h>
+#include <netdb.h>
+#include <time.h>
+
+
+#define BUFF 100
+
+void error(const char* ptr)
 {
-    perror(str);
-    sleep(1);
-    close(sockfd);
+    perror(ptr);
     exit(1);
 }
 
-int main(int argc, char  *argv[])
+int main(int argc, char const *argv[])
 {
-    int n;
-    char recvline[MAXLINE + 1];
-    struct sockaddr_in servaddr;
-    if (argc != 2)
+    char buff[255];
+    char IP[10] = {'\0'};
+    char cmp_str[] = {"quit"};
+    int sock_id=0;
+    int port=0;
+    int sock_len=0;
+    int ret=0;
+    char *retptr = NULL;
+    void *ptr=calloc(BUFF,sizeof(char));
+    struct sockaddr_in client_addr;
+    struct hostent *server;
+    
+    if(argc<2)
     {
-        printf("provide IP");
-        sleep(1);
+        printf("Please give port address and IP address\n");
+        exit(1);
+    }
+    else if(argc<3)
+    {
+        printf("Please give IP address\n");
         exit(1);
     }
 
-    /*Creating Internet stream socket*/
-    if (sockfd = socket(AF_INET, SOCK_STREAM, 0) < 0)
-        _error("socket");
-    
-    /*Initializing TCP/IP,port number , IP address of server*/
-    bzero(&servaddr, sizeof(servaddr));//set memory bytes to 0//
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_port = htons(13);//It conver port to binary//
-    
-    //inet_pton converts the ASCII to numeric IP and stores in servaddr.sin_addr//
-    if (inet_pton(AF_INET, argv[1], &servaddr.sin_addr) <= 0)
-        _error("inet_pton");
-    //inet_addr() can also be used no matters//
-    
+    sock_len=sizeof(client_addr);
 
-    /*Connecting to the server by TCP*/
-    if (connect(sockfd, (SA *)&servaddr, sizeof(servaddr)) < 0)//We are typecasting to SA because it is generic means we supply UDP or TCP it both accept//
-        _error("connect error");
+    port=atoi(argv[1]);
 
-    /*receiving data from the server*/
-    while (1)
+    strcpy(IP,argv[2]);
+    server=gethostbyname(IP);
+    if(server==NULL) error("gethostname");
+
+    /*Creating socket*/
+    sock_id=socket(PF_INET,SOCK_STREAM,0);
+    if(sock_id<0) error("socket");
+
+    bzero((void *)&client_addr,sizeof(client_addr)); 
+    client_addr.sin_family=AF_INET;
+    client_addr.sin_port=htons(port);
+    bcopy((char *)server->h_addr,(char *)&client_addr.sin_addr,server->h_length);
+
+    /*Connecting server*/
+    ret=connect(sock_id,(struct sockaddr*)&client_addr,sock_len);
+    if(ret<0) error("recv");
+
+    system("clear");
+
+    while(1) 
     {
-        n = read(sockfd, recvline, MAXLINE);
-        //read MAXLINE bytes from the server and store in recvline//
-        if (n < 0)
-        _error("read error");
+        /*Write*/
+        bzero((void *)buff, sizeof(buff));
+        retptr = fgets(buff, sizeof(buff), stdin);
+        if (retptr == NULL)
+            error("fgets");
+        ret=write(sock_id,(void *)buff,strlen(buff));
+        if(ret<0) error("write");
+        
+        /*Read*/
+        bzero(buff, sizeof(buff));
+        ret = read(sock_id, (void *)buff, sizeof(buff));
+        if (ret < 0)
+            perror("read");
+        printf("server:- %s",buff);
 
-        recvline[n] = 0; /* null terminate */
-        if (fputs(recvline, stdout) == EOF) //Printing data in recvline//
-            _error("fputs error");
+        ret=strncmp("quit",buff,sizeof("quit"));
+        if(ret<=0) break;
+
     }
-    return 0;
+    ret=close(sock_id);
+    if(ret<0) error("close");
 }
