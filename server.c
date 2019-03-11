@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
     server_addr.sin_port=htons(port);/*Local port*/
 
     /**2) Bind the socket**/
-    ret=bind(sockfd,(struct sockaddr *)&server_addr,sizeof(server_addr));
+    ret=bind(sockfd,(struct sockaddr *)&server_addr,sizeof(server_addr));//adds additional information like port number to the socket//
     if(ret<0) error("bind");
 
     /**listen**/
