@@ -16,7 +16,7 @@ void error(const char* ptr);
 /*Global Variables*/
 int sockfd = 0, newsockfd = 0;
 int ret=0;
-
+/*Once communication is completed we are closing the socket*/
 void _close()
 {
     printf("closing the connection");
@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
     /*Taking port address*/
     port=atoi(argv[1]);
 
-    /**Creating a socket**/
+    /**1) Creating a socket**/
     sockfd=socket(PF_INET,SOCK_STREAM,0);
     if(sockfd<0)
         error("socket");
@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
     server_addr.sin_addr.s_addr=(htonl)INADDR_ANY;/*Any incoming interface*/
     server_addr.sin_port=htons(port);/*Local port*/
 
-    /**Bind the socket**/
+    /**2) Bind the socket**/
     ret=bind(sockfd,(struct sockaddr *)&server_addr,sizeof(server_addr));
     if(ret<0) error("bind");
 
@@ -74,6 +74,7 @@ int main(int argc, char* argv[])
 
     /**accept function**/
     newsockfd=accept(sockfd,(struct sockaddr *)&client_addr,&socklen);
+    //newsockfd contains the reference of client request//
     if(newsockfd<0) error("accept");
     
     /*Signal Handling*/
@@ -85,22 +86,23 @@ int main(int argc, char* argv[])
     while(1)
     {
         /*read*/
-        bzero(buff,sizeof(buff));
+        bzero(buff,sizeof(buff));//clearing the buffer so that the garbage value doesnot comes//
 
-        ret=read(newsockfd,(void *)buff,sizeof(buff));
+        ret=read(newsockfd,(void *)buff,sizeof(buff));//reading the request of client through newsockfd//
         if(ret<0) perror("read");
-        printf("Client :- %s",buff);
+        
+        printf("Client :- %s",buff);//prints client message on terminal//
 
         /*write*/
-        bzero((void *)buff, sizeof(buff));
-        retptr = fgets(buff, sizeof(buff), stdin);
+        bzero((void *)buff, sizeof(buff));//clearing the buffer to write the message//
+        retptr = fgets(buff, sizeof(buff), stdin);//taking keyboard input//
         if (retptr == NULL)
             error("fgets");
-        ret = write(newsockfd, (void *)buff, strlen(buff));
+        ret = write(newsockfd, (void *)buff, strlen(buff));//writing the message on buffer through newsockfd//
         if (ret < 0)
             error("write");
-        ret = strncmp("quit", buff, sizeof("quit"));
-        if(ret<=0) break;
+        ret = strncmp("quit", buff, sizeof("quit"));//check whether client wants to terminate connection//
+        if(ret<=0) break;//return value is 0 if client wants to quit then ending the loop//
     }
     _close();
 }
