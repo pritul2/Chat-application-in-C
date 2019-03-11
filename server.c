@@ -10,7 +10,7 @@
 #include <string.h>
 #include <signal.h>
 
-#define BACKLOG 3
+#define BACKLOG 3 //number of allowed connections//
 
 void error(const char* ptr);
 /*Global Variables*/
@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
     /** sockaddr**/
     server_addr.sin_family=AF_INET;  /* Internet address family for IPv4*/
     server_addr.sin_addr.s_addr=(htonl)INADDR_ANY;/*Any incoming interface*/
-    server_addr.sin_port=htons(port);/*Local port*/
+    server_addr.sin_port=htons(port);/*Local port*/ //htons converts hosts to network short//
 
     /**2) Bind the socket**/
     ret=bind(sockfd,(struct sockaddr *)&server_addr,sizeof(server_addr));//adds additional information like port number to the socket//
